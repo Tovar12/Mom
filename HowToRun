@@ -1,0 +1,7 @@
+1. Compile:
+  javac -cp activemq-all-5.10.0.jar EjemploConsumidor.java
+  javac -cp activemq-all-5.10.0.jar EjemploProductor.java
+
+2. Run:
+  java -cp activemq-all-5.10.0.jar:. EjemploConsumidor
+  java -cp activemq-all-5.10.0.jar:. EjemploProductor
