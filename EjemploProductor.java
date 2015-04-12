@@ -28,8 +28,8 @@ public class EjemploProductor implements ExceptionListener {
 			Session session = connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
 
 			// Create the destination (Topic or Queue)
-			//Destination destination = session.createQueue("MyQUEUE");
-        Destination destination = session.createTopic("MyTOPIC");
+			Destination destination = session.createQueue("MyQUEUE");
+      //Destination destination = session.createTopic("MyTOPIC");
 
 			// Create a MessageProducer from the Session to the Topic or Queue
 			MessageProducer producer = session.createProducer(destination);
