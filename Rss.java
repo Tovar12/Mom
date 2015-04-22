@@ -11,7 +11,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
-
 import java.util.Scanner;
 
 
@@ -120,7 +119,30 @@ public class Rss implements ExceptionListener {
 
     }
 	}
-
-
-
 }
+
+
+
+/**
+
+public void Productor {
+  private static Productor instace;
+
+  private Productor() {
+
+  }
+
+  public static Productor getInstance() {
+    if (instance == null) instance = new Productor();
+    return instance;
+  }
+}
+
+public class Main {
+  public static void main (String [] args) {
+    Productor miProductor = Productor.getInstance();
+    miProductor.miMetodo();
+  }
+}
+
+**/

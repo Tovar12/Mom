@@ -20,6 +20,7 @@ public class User implements ExceptionListener {
   private Destination destination;
   private MessageConsumer consumer;
   private Boolean isListening = true;
+  private Boolean hasTopic = true;
   private String userTopic;
   private Scanner scanner = new Scanner (System.in);
 
@@ -65,41 +66,73 @@ public class User implements ExceptionListener {
     while(true){
       System.out.println("Menu: ");
       System.out.println("1. Listen new topic");
-      //Evaluate if the user is available to listen the message of his topic.
-      if(isListening){
-        System.out.println("2. TurnOff connection");
-      }else{
-        System.out.println("2. TurnOn connection");
-      }
-      //Wait the input of the user and if the
-      switch(scanner.nextInt()){
-        case 1: listenNewTopic();
-                break;
-        case 2: turnOnOrOff();
-                break;
-        default: System.out.println("Input error");
+      if(hasTopic){
+        //Evaluate if the user is available to listen the message of his topic.
+        if(isListening){
+          System.out.println("2. TurnOff connection");
+        }else{
+          System.out.println("2. TurnOn connection");
         }
+        System.out.println("3. Stop listening a topic");
+        System.out.println("4. Exit");
+        //Wait the input of the user
+        switch(scanner.nextInt()){
+          case 1: listenNewTopic();
+                  break;
+          case 2: turnOnOrOff();
+                  break;
+          case 3: stopListening();
+                  break;
+          case 4: System.out.println("Bye");
+                  System.exit(1);
+                  break;
+          default: System.out.println("Input error");
+          }
+      } else {
+        System.out.println("2. Exit");
+        //Wait the input of the user
+        switch(scanner.nextInt()){
+          case 1: listenNewTopic();
+                  break;
+          case 2: System.out.println("Bye");
+                  System.exit(1);
+                  break;
+          default: System.out.println("Input error");
+          }
+      }
     }
-
   }
 
+  public void stopListening() throws Exception{
+    System.out.println("You aren't listening a topic");
+    //destination = session.createTopic("x");
+    //consumer = session.createConsumer(destination);
+    consumer.close();
+    hasTopic = false;
+  }
+
+  //Start listening for message
   public void listen()throws Exception{
     consumer.setMessageListener(listener);
     connection.start();
   }
-
+  //Receive an input an listen to that topic
   public void listenNewTopic() throws Exception{
     System.out.println("Write the name of a topic you would like to subscribe:");
     userTopic = scanner.next();
-    consumer.setMessageListener(null);
     destination = session.createTopic(userTopic);
     consumer = session.createConsumer(destination);
     System.out.println("_________________________________________");
     System.out.println("You are now listening *" + userTopic + "*");
     System.out.println("_________________________________________");
+    hasTopic = true;
     listen();
   }
-
+/**
+  Start or stop listening a topic, if the user decide to stop listening a topic
+  the message will be save and when the user decide to start listening again he
+  will receive the messages that were sent when he was offline.
+  **/
   public void turnOnOrOff() throws Exception {
     if(isListening){
       System.out.println("Connection turned off");
