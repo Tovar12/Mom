@@ -119,7 +119,8 @@ public class User implements ExceptionListener {
   //Receive an input an listen to that topic
   public void listenNewTopic() throws Exception{
     System.out.println("Write the name of a topic you would like to subscribe:");
-    userTopic = scanner.next();
+    scanner.nextLine();
+    userTopic = scanner.nextLine().toLowerCase();
     destination = session.createTopic(userTopic);
     consumer = session.createConsumer(destination);
     System.out.println("_________________________________________");

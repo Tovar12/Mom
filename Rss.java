@@ -77,41 +77,54 @@ public class Rss implements ExceptionListener {
 
   public void createNewTopic(){
     System.out.println("Write the name of new topic");
-    String newTopic = scanner.next();
+    scanner.nextLine();
+    String newTopic = scanner.nextLine().toLowerCase();
     topicsAvailable.add(newTopic);
     System.out.println("The new topic with name " + newTopic +
                                                         " has been created");
   }
 
   public void getTopicsAvailable(){
-    for(int i = 0; i < topicsAvailable.size(); i++){
-      System.out.println(topicsAvailable.get(i));
+    if(topicsAvailable.size() != 0){
+      for(int i = 0; i < topicsAvailable.size(); i++){
+        System.out.println("| " + topicsAvailable.get(i) + " |");
+      }
+    }else{
+      System.out.println("You don't have topics created");
     }
   }
 
   public void sendMessage() throws Exception{
-    System.out.println("Select the topic:");
-    for(int i = 0; i < topicsAvailable.size(); i++){
-      System.out.println((i+1) + ". " + topicsAvailable.get(i));
+    if(topicsAvailable.size() != 0){
+      System.out.println("Select the topic:");
+      for(int i = 0; i < topicsAvailable.size(); i++){
+        System.out.println((i+1) + ". " + topicsAvailable.get(i));
+      }
+      String topicSelected = topicsAvailable.get(scanner.nextInt()-1);
+      destination = session.createTopic(topicSelected);
+      producer = session.createProducer(destination);
+      System.out.println("Write the message:");
+      scanner.nextLine();
+      String inputMessage = scanner.nextLine().toLowerCase();
+      TextMessage message = session.createTextMessage(inputMessage);
+      System.out.println("How many times would you like to send the message:");
+      int times = scanner.nextInt();
+      for(; times > 0; times--)  producer.send(message);
+      System.out.println("The message " + inputMessage + " has been sent");
+    }else{
+      System.out.println("You don't have topics created");
     }
-    String topicSelected = topicsAvailable.get(scanner.nextInt()-1);
-    destination = session.createTopic(topicSelected);
-    producer = session.createProducer(destination);
-    System.out.println("Write the message:");
-    String inputMessage = scanner.next();
-    TextMessage message = session.createTextMessage(inputMessage);
-    System.out.println("How many times would you like to send the message:");
-    int times = scanner.nextInt();
-    for(; times > 0; times--)  producer.send(message);
-    System.out.println("The message " + inputMessage + " has been sent");
   }
 
   public void deleteTopic(){
     if(topicsAvailable.size() != 0){
-      System.out.println("These are the topics availables, write the name of the"+
-                                  " topic you want to delete");
+      System.out.println("These are the topics availables");
+      System.out.println("----------------------------------");
       getTopicsAvailable();
-      String option = scanner.next();
+      scanner.nextLine();
+      System.out.println("----------------------------------");
+      System.out.println("write the name of the topic you want to delete:");
+      String option = scanner.nextLine().toLowerCase();
       topicsAvailable.remove(option);
     } else {
       System.out.println("You don't have topics created");
