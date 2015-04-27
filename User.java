@@ -13,6 +13,14 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.util.Collections;
+import java.util.Iterator;
 
 public class User implements ExceptionListener {
   private Session session;
@@ -23,6 +31,7 @@ public class User implements ExceptionListener {
   private Boolean hasTopic = true;
   private String userTopic;
   private Scanner scanner = new Scanner (System.in);
+  private ArrayList<String> topicsAvailable = new ArrayList<String>();
 
 //Here we create the connection and subscribe the user to a default topic
   public void processConsumer() throws Exception{
@@ -112,22 +121,14 @@ public class User implements ExceptionListener {
   }
 
   //Start listening for message
-  public void listen()throws Exception{
+  public void listen() throws Exception{
     consumer.setMessageListener(listener);
     connection.start();
   }
   //Receive an input an listen to that topic
   public void listenNewTopic() throws Exception{
-    System.out.println("Write the name of a topic you would like to subscribe:");
-    scanner.nextLine();
-    userTopic = scanner.nextLine().toLowerCase();
-    destination = session.createTopic(userTopic);
-    consumer = session.createConsumer(destination);
-    System.out.println("_________________________________________");
-    System.out.println("You are now listening *" + userTopic + "*");
-    System.out.println("_________________________________________");
-    hasTopic = true;
-    listen();
+    readFile();
+    selectNewTopic();
   }
 /**
   Start or stop listening a topic, if the user decide to stop listening a topic
@@ -144,6 +145,96 @@ public class User implements ExceptionListener {
       isListening = true;
       consumer.setMessageListener(listener);
     }
+  }
+
+  public void selectNewTopic(){
+    try{
+      File file = new File("topics.txt");
+      FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
+      try{
+        //Block the file to avoid other people write or read the file
+        FileLock lock = channel.tryLock();
+        while (!lock.isValid())
+                lock = channel.lock();
+
+        if(lock.isValid()){
+          try{
+            if(topicsAvailable.size() != 0){
+              System.out.println("These are the topics availables");
+              showLines();
+              scanner.nextLine();
+              System.out.println("Select the topic:");
+              for(int i = 0; i < topicsAvailable.size(); i++){
+                System.out.println((i+1) + ". " + topicsAvailable.get(i));
+              }
+              int topicSelected = scanner.nextInt();
+              destination = session.
+                createTopic(topicsAvailable.get(topicSelected-1));
+              consumer = session.createConsumer(destination);
+              System.out.println("_________________________________________");
+              System.out.println("You are now listening *" +
+                                  topicsAvailable.get(topicSelected-1) + "*");
+              System.out.println("_________________________________________");
+              hasTopic = true;
+              listen();
+
+            } else {
+              System.out.println("There is no topics availables");
+            }
+          }catch(Exception e){
+            System.out.println("The topics can't be displayed at this moment");
+            e.printStackTrace();
+          }
+        }
+        lock.release();
+      }catch(Exception e){
+        System.out.println("Archivo Bloqueado");
+      }
+      channel.close();
+    }catch(Exception e){
+      System.out.println("Archivo Bloqueado");
+    }
+  }
+
+  public boolean readFile(){
+    try{
+      File file = new File("topics.txt");
+      FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
+      try{
+        //Block the file to avoid other people write or read the file
+        FileLock lock = channel.tryLock();
+        try{
+          if (file.length() != 0) {
+            long channelSize = channel.size();
+            ByteBuffer buf = ByteBuffer.allocate((int) channelSize);
+            channel.read(buf);
+            buf.rewind();
+            String allInput = new String(buf.array(), "UTF-8");
+            String[] parts = allInput.split("\n");            
+            topicsAvailable.clear();
+            Collections.addAll(topicsAvailable, parts);
+            Collections.sort(topicsAvailable);
+          }
+          }catch(Exception e){
+            System.out.println("The topics can't be displayed at this moment");
+            e.printStackTrace();
+            return false;
+          }
+          lock.release();
+      }catch(Exception e){
+        System.out.println("Archivo Bloqueado");
+        return false;
+      }
+      channel.close();
+    }catch(Exception e){
+      System.out.println("Archivo Bloqueado");
+      return false;
+    }
+    return true;
+  }
+
+  public void showLines(){
+    System.out.println("-----------------------------------------------------");
   }
 
   public synchronized void onException(JMSException ex) {
